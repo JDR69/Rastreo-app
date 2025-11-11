@@ -38,26 +38,16 @@ dependencies:
   connectivity_plus: ^7.0.0
   battery_plus: ^7.0.0
   device_info_plus: ^12.2.0
-  isar: ^3.1.0+1
-  isar_flutter_libs: ^3.1.0+1
+  # isar removed: not used
   uuid: ^4.5.2
   dio: ^5.9.0
-  flutter_foreground_task: ^9.1.0
-  telephony: ^0.2.0
-  flutter_native_timezone_updated_gradle: ^2.0.3
+  path_provider: ^2.1.5
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^5.0.0
-  build_runner: ^2.4.13
-  isar_generator: ^3.1.0+1
+  # build_runner and isar_generator removed: not used
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

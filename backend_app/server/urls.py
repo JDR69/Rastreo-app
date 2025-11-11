@@ -16,7 +16,10 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from rastreo import views as rastreo_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # Ingesta de eventos desde la app móvil
+    path('api/events/batch', rastreo_views.events_batch, name='events_batch'),
 ]

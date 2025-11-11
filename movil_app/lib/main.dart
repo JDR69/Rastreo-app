@@ -1,4 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:device_info_plus/device_info_plus.dart';
+import 'services/collector.dart';
+import 'services/sync_service.dart';
+import 'services/local_queue.dart';
+import 'config.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,7 +37,7 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Rastreo - Demo'),
     );
   }
 }
@@ -54,16 +61,64 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  final _collector = DataCollectorService();
+  final _sync = SyncService();
+  String? _deviceId;
+  Timer? _syncTimer;
+  int _queued = 0;
+  bool _running = false;
 
-  void _incrementCounter() {
+  @override
+  void initState() {
+    super.initState();
+    _initDeviceId();
+  }
+
+  Future<void> _initDeviceId() async {
+    if (kIsWeb) {
+      _deviceId = 'web';
+    } else {
+      try {
+        final info = await DeviceInfoPlugin().androidInfo;
+        _deviceId = info.id;
+      } catch (_) {
+        _deviceId = 'unknown-device';
+      }
+    }
+    setState(() {});
+  }
+
+  Future<void> _start() async {
+    if (kIsWeb) {
+      // En Web no inicializamos cola/collector: app enfocada en Android
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Esta app está diseñada para Android. Usa un emulador o dispositivo Android.',
+          ),
+        ),
+      );
+      return;
+    }
+    await LocalQueueService().init();
+    await _collector.start();
+    _syncTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
+      await _sync.trySync();
+      setState(() {
+        _queued = LocalQueueService().length;
+      });
+    });
     setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+      _running = true;
+      _queued = LocalQueueService().length;
+    });
+  }
+
+  Future<void> _stop() async {
+    await _collector.stop();
+    _syncTimer?.cancel();
+    setState(() {
+      _running = false;
     });
   }
 
@@ -77,46 +132,56 @@ class _MyHomePageState extends State<MyHomePage> {
     // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
       body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
         child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+            if (kIsWeb)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Text(
+                  'Modo Web: funciones deshabilitadas. Ejecuta en Android.',
+                  style: TextStyle(color: Colors.orange),
+                ),
+              ),
+            Text('DeviceId: ${_deviceId ?? '-'}'),
+            const SizedBox(height: 8),
+            Text('API: ${AppConfig.apiBase}'),
+            const SizedBox(height: 8),
+            Text('Cola local: $_queued eventos'),
+            const SizedBox(height: 16),
+            if (!_running)
+              ElevatedButton.icon(
+                onPressed: _start,
+                icon: const Icon(Icons.play_arrow),
+                label: const Text('Iniciar recolección'),
+              )
+            else
+              ElevatedButton.icon(
+                onPressed: _stop,
+                icon: const Icon(Icons.stop),
+                label: const Text('Detener'),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+              ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: kIsWeb
+                  ? null
+                  : () async {
+                      await _collector.collectOnce();
+                      setState(() {
+                        _queued = LocalQueueService().length;
+                      });
+                    },
+              icon: const Icon(Icons.my_location),
+              label: const Text('Recolectar ahora'),
             ),
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

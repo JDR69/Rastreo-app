@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-e2@o!%ek4yzkoecn1lis#lp#iv(f$3$#vh8bcs3p2i15j@$=4%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -120,3 +120,6 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Mongo settings (para ingesta de eventos)
+# Configurables vía variables de entorno MONGO_URI y MONGO_DB

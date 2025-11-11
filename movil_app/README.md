@@ -1,16 +1,31 @@
-# movil_app
+# App Flutter de Rastreo (Android)
 
-A new Flutter project.
+Requisitos:
+- Flutter 3.24+
 
-## Getting Started
+## Configurar API
 
-This project is a starting point for a Flutter application.
+Edita `lib/config.dart` y cambia `apiBase` a la IP del servidor Django en tu red:
 
-A few resources to get you started if this is your first Flutter project:
+```dart
+static const String apiBase = 'http://192.168.0.100:8000/api';
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Permisos
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+El `android/app/src/main/AndroidManifest.xml` ya incluye permisos para ubicación, red, WiFi, Internet y servicio en foreground.
+
+## Ejecutar
+
+- Modo debug:
+	- Conecta el dispositivo Android.
+	- `flutter run`
+
+- Generar APK:
+	- `flutter build apk --release`
+
+## Uso
+
+1. Abre la app y pulsa "Iniciar recolección".
+2. La app capturará un evento cada ~15s (configurable) y los enviará en lotes de hasta 100.
+3. Si no hay red, se guardan localmente hasta 3 horas.

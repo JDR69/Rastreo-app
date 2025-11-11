@@ -69,6 +69,24 @@ class DataCollectorService {
 
   /// Intenta obtener una posición con varias estrategias para evitar Timeout perpetuo.
   Future<Position?> _obtainPosition() async {
+    // Si está activado el modo de ubicación simulada, usarla directamente
+    if (AppConfig.useSimulatedLocation) {
+      // ignore: avoid_print
+      print('[collector][debug] usando ubicación simulada');
+      return Position(
+        latitude: AppConfig.simulatedLatitude,
+        longitude: AppConfig.simulatedLongitude,
+        timestamp: DateTime.now(),
+        accuracy: 0.0,
+        altitude: 0.0,
+        altitudeAccuracy: 0.0,
+        heading: 0.0,
+        headingAccuracy: 0.0,
+        speed: 0.0,
+        speedAccuracy: 0.0,
+      );
+    }
+
     try {
       // 1. Intento directo (medium) con timeout
       return await Geolocator.getCurrentPosition(

@@ -11,4 +11,11 @@ class AppConfig {
 
   // Retención máxima en milisegundos (3 horas)
   static const int retentionMs = 3 * 60 * 60 * 1000;
+
+  // Modo de prueba: usar ubicación simulada (útil para emulador con problemas de GPS)
+  static const bool useSimulatedLocation = true;
+
+  // Ubicación simulada (Santa Cruz, Bolivia como ejemplo)
+  static const double simulatedLatitude = -17.783333;
+  static const double simulatedLongitude = -63.182222;
 }

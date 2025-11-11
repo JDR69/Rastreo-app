@@ -13,11 +13,12 @@ def _get_collection():
 		mongo_uri = os.getenv("MONGO_URI", "mongodb://localhost:27017")
 		_mongo_client = MongoClient(mongo_uri, serverSelectionTimeoutMS=3000)
 	db_name = os.getenv("MONGO_DB", "rastreo_db")
-	collection = _mongo_client[db_name]["events"]
+	collection_name = os.getenv("MONGO_COLLECTION", "Telefonia")
+	collection = _mongo_client[db_name][collection_name]
 	return collection
 
 # Nuevo esquema mínimo solicitado
-# Campos: id, latitud, longitud, DbmInternet, TypeInternet, BtteryLevel
+# Campos: id, latitud, longitud, DbmInternet, TypeInternet, BtteryLevel, Telefonia(opcional)
 REQUIRED_FIELDS = ["id", "latitud", "longitud", "BtteryLevel"]
 
 def _validate_event(e: Dict[str, Any]) -> bool:
@@ -44,6 +45,7 @@ def _normalize_event(e: Dict[str, Any]) -> Dict[str, Any]:
 		"DbmInternet": e.get("DbmInternet"),
 		"TypeInternet": e.get("TypeInternet"),
 		"BtteryLevel": float(e.get("BtteryLevel")),
+		"Telefonia": e.get("Telefonia"),  # Entel | Tigo | Viva | null
 	}
 
 @csrf_exempt

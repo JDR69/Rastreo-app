@@ -3,6 +3,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/local_queue.dart';
+import 'carrier.dart';
 import '../config.dart';
 
 class DataCollectorService {
@@ -48,17 +49,24 @@ class DataCollectorService {
           cellType = 'none';
         }
       } catch (_) {}
+      // Obtener operador telefónico (telefonia) vía canal nativo
+      String? carrier;
+      try {
+        carrier = await CarrierService.getCarrierName();
+      } catch (_) {}
+
       final ev = _queue.addSimple(
         latitud: pos.latitude,
         longitud: pos.longitude,
         dbmInternet: cellDbm,
         typeInternet: cellType,
         btteryLevel: batteryLevel.toDouble(),
+        telefonia: carrier,
       );
       // Debug log: confirma encolado
       // ignore: avoid_print
       print(
-        '[collector] encolado id=${ev.id} lat=${ev.latitud} lng=${ev.longitud} batt=${ev.btteryLevel} type=${cellType ?? 'null'}',
+        '[collector] encolado id=${ev.id} lat=${ev.latitud} lng=${ev.longitud} batt=${ev.btteryLevel} type=${cellType ?? 'null'} tel=${carrier ?? 'null'}',
       );
     } catch (e) {
       // Reportar errores puntuales para debug

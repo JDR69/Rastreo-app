@@ -49,6 +49,7 @@ class LocalQueueService {
     required int? dbmInternet,
     required String? typeInternet,
     required double btteryLevel,
+    String? telefonia,
   }) {
     final ev = EventModel(
       id: _uuid.v4(),
@@ -57,6 +58,7 @@ class LocalQueueService {
       dbmInternet: dbmInternet,
       typeInternet: typeInternet,
       btteryLevel: btteryLevel,
+      telefonia: telefonia,
     );
     _events.add(ev);
     _purgeOld();

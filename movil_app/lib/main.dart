@@ -128,12 +128,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -156,32 +150,24 @@ class _MyHomePageState extends State<MyHomePage> {
             Text('API: ${AppConfig.apiBase}'),
             const SizedBox(height: 8),
             Text('Cola local: $_queued eventos'),
-            const SizedBox(height: 16),
-            if (!_running)
-              ElevatedButton.icon(
-                onPressed: _start,
-                icon: const Icon(Icons.play_arrow),
-                label: const Text('Iniciar recolección'),
-              )
-            else
-              ElevatedButton.icon(
-                onPressed: _stop,
-                icon: const Icon(Icons.stop),
-                label: const Text('Detener'),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-              ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
             ElevatedButton.icon(
               onPressed: kIsWeb
                   ? null
                   : () async {
-                      await _collector.collectOnce();
-                      setState(() {
-                        _queued = LocalQueueService().length;
-                      });
+                      if (_running) {
+                        await _stop();
+                      } else {
+                        await _start();
+                      }
                     },
-              icon: const Icon(Icons.my_location),
-              label: const Text('Recolectar ahora'),
+              icon: Icon(_running ? Icons.stop : Icons.play_arrow),
+              label: Text(
+                _running ? 'Detener recolección' : 'Recolectar datos',
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _running ? Colors.red : null,
+              ),
             ),
           ],
         ),

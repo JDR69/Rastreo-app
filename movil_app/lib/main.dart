@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:device_info_plus/device_info_plus.dart';
 import 'services/collector.dart';
-import 'services/sync_service.dart';
 import 'services/local_queue.dart';
+import 'services/sync_service.dart';
 import 'config.dart';
 
 import 'background_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeService();
+  // Configuración del servicio se realizará al iniciar desde la UI
   runApp(const MyApp());
 }
 
@@ -39,9 +39,15 @@ class MyApp extends StatelessWidget {
         //
         // This works for code too, not just values: Most code changes can be
         // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color.fromARGB(255, 58, 158, 183),
+          brightness: Brightness.dark,
+        ),
+        scaffoldBackgroundColor: Colors.black,
+        textTheme: const TextTheme(bodyMedium: TextStyle(color: Colors.white)),
+        appBarTheme: const AppBarTheme(backgroundColor: Colors.black),
       ),
-      home: const MyHomePage(title: 'Rastreo - Demo'),
+      home: const MyHomePage(title: 'Rastreo'),
     );
   }
 }
@@ -66,7 +72,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _collector = DataCollectorService();
-  final _sync = SyncService();
+  final _syncService = SyncService();
   String? _deviceId;
   Timer? _syncTimer;
   int _queued = 0;
@@ -105,9 +111,18 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
     await LocalQueueService().init();
+    // Solicitar permisos usando el collector y detener su temporizador inmediato
     await _collector.start();
-    _syncTimer = Timer.periodic(const Duration(seconds: 10), (_) async {
-      await _sync.trySync();
+    await _collector.stop();
+    // Primera recolección inmediata para tener datos antes del primer tick
+    await _collector.collectOnce();
+    await _syncService.trySync();
+    // Iniciar servicio en segundo plano (recolección y sync cada AppConfig.intervalSeconds)
+    await startBackgroundService();
+    // Pequeño timer para refrescar indicadores en UI
+    _syncTimer = Timer.periodic(Duration(seconds: AppConfig.intervalSeconds), (
+      _,
+    ) async {
       setState(() {
         _queued = LocalQueueService().length;
       });
@@ -119,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _stop() async {
-    await _collector.stop();
+    await stopBackgroundService();
     _syncTimer?.cancel();
     setState(() {
       _running = false;
@@ -137,6 +152,15 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            const Text(
+              'Hola Bicho!',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 20),
             if (kIsWeb)
               const Padding(
                 padding: EdgeInsets.only(bottom: 12),
@@ -146,8 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             Text('DeviceId: ${_deviceId ?? '-'}'),
-            const SizedBox(height: 8),
-            Text('API: ${AppConfig.apiBase}'),
             const SizedBox(height: 8),
             Text('Cola local: $_queued eventos'),
             const SizedBox(height: 24),

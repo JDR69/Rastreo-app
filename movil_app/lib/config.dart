@@ -4,7 +4,7 @@ class AppConfig {
   //static const String apiBase = 'http://10.0.2.2:8000/api';
   static const String apiBase = 'https://rastreo-app.onrender.com/api';
   // Intervalo en segundos entre eventos
-  static const int intervalSeconds = 10; // exacto cada 10s
+  static const int intervalSeconds = 5; // exacto cada 5s
 
   // Tamaño del lote a enviar
   static const int batchSize = 100;

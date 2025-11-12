@@ -1,0 +1,10 @@
+services:
+- type: web
+  name: rastreo-backend
+  env: python
+  plan: free
+  buildCommand: cd backend_app && pip install -r requirements.txt
+  startCommand: cd backend_app && gunicorn backend_app.wsgi:application
+  envVars:
+    - key: DJANGO_SETTINGS_MODULE
+      value: backend_app.settings

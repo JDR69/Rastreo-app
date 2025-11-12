@@ -7,7 +7,11 @@ import 'services/sync_service.dart';
 import 'services/local_queue.dart';
 import 'config.dart';
 
-void main() {
+import 'background_service.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeService();
   runApp(const MyApp());
 }
 

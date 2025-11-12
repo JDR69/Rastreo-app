@@ -1,2 +1,4 @@
 Django>=5.2
 pymongo>=4.8
+gunicorn
+psycopg2-binary

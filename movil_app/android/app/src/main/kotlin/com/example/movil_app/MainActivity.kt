@@ -8,6 +8,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
 	private val CHANNEL = "app.telefonia"
+	private val SIGNAL_CHANNEL = "app.signal"
 
 	override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
 		super.configureFlutterEngine(flutterEngine)
@@ -31,6 +32,34 @@ class MainActivity : FlutterActivity() {
 					}
 					result.success(normalized)
 				}
+			} else {
+				result.notImplemented()
+			}
+		}
+
+		MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SIGNAL_CHANNEL).setMethodCallHandler { call, result ->
+			if (call.method == "getSignalDbm") {
+				val tm = applicationContext.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
+				try {
+					val infos = tm?.allCellInfo
+					if (infos != null && infos.isNotEmpty()) {
+						val info = infos.firstOrNull { it.isRegistered }
+						if (info != null) {
+							val dbm = when (info) {
+								is android.telephony.CellInfoGsm -> info.cellSignalStrength.dbm
+								is android.telephony.CellInfoCdma -> info.cellSignalStrength.dbm
+								is android.telephony.CellInfoLte -> info.cellSignalStrength.dbm
+								is android.telephony.CellInfoWcdma -> info.cellSignalStrength.dbm
+								else -> null
+							}
+							result.success(dbm)
+							return@setMethodCallHandler
+						}
+					}
+				} catch (e: Exception) {
+					// ignore
+				}
+				result.success(null)
 			} else {
 				result.notImplemented()
 			}

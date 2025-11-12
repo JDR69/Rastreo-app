@@ -4,6 +4,7 @@ import 'package:battery_plus/battery_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import '../services/local_queue.dart';
 import 'carrier.dart';
+import 'signal.dart';
 import '../config.dart';
 
 class DataCollectorService {
@@ -37,7 +38,10 @@ class DataCollectorService {
       }
       final batteryLevel = await _battery.batteryLevel; // 0-100
       // Datos de red (simplificado)
-      int? cellDbm; // emulador: típicamente null
+      int? cellDbm;
+      try {
+        cellDbm = await SignalService.getSignalDbm();
+      } catch (_) {}
       String? cellType; // 'wifi' | 'mobile' | 'none'
       try {
         final conn = await Connectivity().checkConnectivity();

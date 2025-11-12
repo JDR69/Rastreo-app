@@ -50,17 +50,23 @@ def _normalize_event(e: Dict[str, Any]) -> Dict[str, Any]:
 
 @csrf_exempt
 def events_batch(request: HttpRequest):
+	import logging
+	logger = logging.getLogger("rastreo.views")
 	if request.method != "POST":
+		logger.warning("Método no permitido: %s", request.method)
 		return JsonResponse({"error": "Only POST allowed"}, status=405)
 	try:
 		body = request.body.decode("utf-8")
+		logger.info("Body recibido: %s", body)
 		data = json.loads(body)
 	except Exception as ex:
+		logger.error("Error decodificando JSON: %s", ex)
 		return JsonResponse({"error": f"Invalid JSON: {ex}"}, status=400)
 	# Permitir también un solo objeto para comodidad en pruebas
 	if isinstance(data, dict):
 		data = [data]
 	if not isinstance(data, list):
+		logger.error("Formato de datos no válido: %s", type(data))
 		return JsonResponse({"error": "Expected a JSON array or object"}, status=400)
 	valid_events: List[Dict[str, Any]] = []
 	rejected = 0
@@ -68,13 +74,18 @@ def events_batch(request: HttpRequest):
 		if _validate_event(ev):
 			valid_events.append(_normalize_event(ev))
 		else:
+			logger.warning("Evento rechazado: %s", ev)
 			rejected += 1
+	logger.info("Eventos válidos: %d, rechazados: %d", len(valid_events), rejected)
 	if valid_events:
 		coll = _get_collection()
+		logger.info("Insertando en MongoDB: %s", valid_events)
 		try:
 			result = coll.insert_many(valid_events, ordered=False)
 			inserted = len(result.inserted_ids)
+			logger.info("Insertados en MongoDB: %d", inserted)
 		except Exception as ex:
+			logger.error("Error al insertar en MongoDB: %s", ex)
 			return JsonResponse({"error": f"DB error: {ex}"}, status=500)
 	else:
 		inserted = 0

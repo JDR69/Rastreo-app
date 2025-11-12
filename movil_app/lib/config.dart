@@ -1,8 +1,8 @@
 class AppConfig {
   // TODO: Cambia la IP al servidor Django en tu red local
   //static const String apiBase = 'http://192.168.0.100:8000/api';
-  static const String apiBase = 'http://10.0.2.2:8000/api';
-
+  //static const String apiBase = 'http://10.0.2.2:8000/api';
+  static const String apiBase = 'https://rastreo-app.onrender.com/api';
   // Intervalo en segundos entre eventos
   static const int intervalSeconds = 10; // exacto cada 10s
 
